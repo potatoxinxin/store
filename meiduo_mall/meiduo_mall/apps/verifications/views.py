@@ -49,8 +49,15 @@ class SMSCodeView(GenericAPIView):
 
         # 保存验证码及发送记录
         redis_conn = get_redis_connection('verify_codes')
-        redis_conn.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
-        redis_conn.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+        # redis_conn.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
+        # redis_conn.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+
+        # 使用 redis 的 pipeline 管道一次执行多个命令  与redis数据库连接一次就好
+        pl = redis_conn.pipeline()
+        pl.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
+        pl.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+        # 执行 pl
+        pl.execute()
 
         # 发送短信
         ccp = CCP()

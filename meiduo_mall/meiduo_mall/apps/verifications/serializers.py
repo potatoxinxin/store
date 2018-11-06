@@ -1,5 +1,10 @@
 from rest_framework import serializers
 from django_redis import get_redis_connection
+from redis.exceptions import RedisError
+import logging
+
+
+logger = logging.getLogger('django')
 
 
 class CheckImageCodeSerializer(serializers.Serializer):
@@ -21,6 +26,12 @@ class CheckImageCodeSerializer(serializers.Serializer):
         if real_image_code is None:
             # 说明验证码过期或者不存在
             raise serializers.ValidationError('无效的图片验证码')
+
+        # 删除 redis 中的图片验证码，防止用户对同一个进行多次请求验证
+        try:
+            redis_conn.delete('img_%s' % image_code_id )
+        except RedisError as e:
+            logger.error(e)
 
         # 进行对比
         real_image_code = real_image_code.decode()  # 数据库中的验证码是字节类型，需要转码
