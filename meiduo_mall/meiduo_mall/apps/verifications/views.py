@@ -10,7 +10,7 @@ from meiduo_mall.libs.captcha.captcha import captcha
 from meiduo_mall.libs.yuntongxun.sms import CCP
 from . import constants
 from . import serializers
-
+from celery_tasks.sms.tasks import send_sms_code
 # Create your views here.
 
 
@@ -59,10 +59,12 @@ class SMSCodeView(GenericAPIView):
         # 执行 pl
         pl.execute()
 
-        # 发送短信
-        ccp = CCP()
-        time = str(constants.SMS_CODE_REDIS_EXPIRES / 60)
-        ccp.send_template_sms(mobile, [sms_code, time], constants.SMA_CODE_TEMP_ID)
+        # # 发送短信
+        # ccp = CCP()
+        # time = str(constants.SMS_CODE_REDIS_EXPIRES / 60)
+        # ccp.send_template_sms(mobile, [sms_code, time], constants.SMA_CODE_TEMP_ID)
+        # 使用 celery 发布异步任务
+        send_sms_code.delay(mobile, sms_code)
 
         # 返回
         return Response({'message': 'OK'})
