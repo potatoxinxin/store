@@ -2,9 +2,14 @@ from django.shortcuts import render
 from django_redis import get_redis_connection
 from django.http.response import HttpResponse
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
+import random
+from rest_framework.response import Response
 
 from meiduo_mall.libs.captcha.captcha import captcha
+from meiduo_mall.libs.yuntongxun.sms import CCP
 from . import constants
+from . import serializers
 
 # Create your views here.
 
@@ -27,4 +32,43 @@ class ImageCodeView(APIView):
         # 固定返回验证码图片数据，不需要REST framework框架的Response帮助我们决定返回响应数据的格式
         # 所以此处直接使用Django原生的HttpResponse即可
         return HttpResponse(image, content_type="images/jpg")
+
+
+class SMSCodeView(GenericAPIView):
+    serializer_class = serializers.CheckImageCodeSerializer
+
+    def get(self, request, mobile):
+        # 校验图片验证码和发送短信的频次
+        # mobile 是被放到了类视图对象属性的 kwargs 中
+        serializer = self.get_serializer( data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+
+        # 校验通过
+        # 生成短信验证码
+        sms_code = "%06d" % random.randint(0, 999999)
+
+        # 保存验证码及发送记录
+        redis_conn = get_redis_connection('verify_codes')
+        redis_conn.setex('sms_%s' % mobile, constants.SMS_CODE_REDIS_EXPIRES, sms_code)
+        redis_conn.setex('send_flag_%s' % mobile, constants.SEND_SMS_CODE_INTERVAL, 1)
+
+        # 发送短信
+        ccp = CCP()
+        time = str(constants.SMS_CODE_REDIS_EXPIRES / 60)
+        ccp.send_template_sms(mobile, [sms_code, time], constants.SMA_CODE_TEMP_ID)
+
+        # 返回
+        return Response({'message': 'OK'})
+
+
+
+
+
+
+
+
+
+
+
+
 
