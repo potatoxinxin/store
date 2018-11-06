@@ -20,7 +20,7 @@ class CheckImageCodeSerializer(serializers.Serializer):
         text = attrs['text']
 
         # 查询 redis 数据库，查询真实的验证码
-        redis_conn = get_redis_connection('velify_codes')
+        redis_conn = get_redis_connection('verify_codes')
         real_image_code = redis_conn.get('img_%s' % image_code_id)
 
         if real_image_code is None:
@@ -29,7 +29,7 @@ class CheckImageCodeSerializer(serializers.Serializer):
 
         # 删除 redis 中的图片验证码，防止用户对同一个进行多次请求验证
         try:
-            redis_conn.delete('img_%s' % image_code_id )
+            redis_conn.delete('img_%s' % image_code_id)
         except RedisError as e:
             logger.error(e)
 
