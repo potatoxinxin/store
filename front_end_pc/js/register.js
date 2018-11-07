@@ -175,6 +175,11 @@ var vm = new Vue({
                         responseType: 'json'
                     })
                     .then(response => {
+                    	// 保存后端返回的 token 数据
+						localStorage.token = response.data.token
+						localStorage.username = response.data.username
+						localStorage.user_id = response.data.user_id
+                    	// 跳转到主页
                         location.href = '/index.html';
                     })
                     .catch(error=> {

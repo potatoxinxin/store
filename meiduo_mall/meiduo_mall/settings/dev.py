@@ -218,9 +218,11 @@ REST_FRAMEWORK = {
     ),
 }
 
-# JWT 的有效期
+# JWT
 JWT_AUTH = {
+    # JWT 的有效期
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+    'JWT_RESPONSE_PAYLOAD_HANDLER': 'users.utils.jwt_response_payload_handler',
 }
 
 # django 认证系统使用的模型类
