@@ -40,7 +40,7 @@ class SMSCodeView(GenericAPIView):
     def get(self, request, mobile):
         # 校验图片验证码和发送短信的频次
         # mobile 是被放到了类视图对象属性的 kwargs 中
-        serializer = self.get_serializer( data=request.query_params)
+        serializer = self.get_serializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
 
         # 校验通过
