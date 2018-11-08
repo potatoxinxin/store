@@ -40,8 +40,9 @@ class CheckImageCodeSerializer(serializers.Serializer):
 
         # redis 中发送短信验证码的标志 send_flag_<mobile>: 1, 由 redis 维护 60s 的有效期
         mobile = self.context['view'].kwargs['mobile']
-        send_flag = redis_conn.get('send_flag_%s' % mobile)
-        if send_flag:
-            raise serializers.ValidationError('发送短信次数过于频繁')
+        if mobile:
+            send_flag = redis_conn.get('send_flag_%s' % mobile)
+            if send_flag:
+                raise serializers.ValidationError('发送短信次数过于频繁')
 
         return attrs

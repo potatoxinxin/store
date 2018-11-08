@@ -1,0 +1,2 @@
+# 发送短信 token 的有效期
+SEND_SMS_CODE_TOKEN_EXIPIRES = 300
