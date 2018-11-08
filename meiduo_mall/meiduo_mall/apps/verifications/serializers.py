@@ -39,7 +39,7 @@ class CheckImageCodeSerializer(serializers.Serializer):
             logger.error(e)
 
         # redis 中发送短信验证码的标志 send_flag_<mobile>: 1, 由 redis 维护 60s 的有效期
-        mobile = self.context['view'].kwargs['mobile']
+        mobile = self.context['view'].kwargs.get('mobile')
         if mobile:
             send_flag = redis_conn.get('send_flag_%s' % mobile)
             if send_flag:
