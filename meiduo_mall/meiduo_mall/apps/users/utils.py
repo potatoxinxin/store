@@ -43,6 +43,10 @@ class UsernameMobileAuthBackend(ModelBackend):
         # 根据 username 查询用户对象 ，  username 用户名 手机号
         user = get_user_by_account(username)
         # 如果用户对象存在，调用 check_password 方法检查密码
+        if user is not None and user.check_password(password):
+            # 验证成功，返回对象
+            return user
+
 
 
 
