@@ -74,13 +74,13 @@ class SMSCodeView(GenericAPIView):
         return Response({'message': 'OK'})
 
 
-class SMSCodeByTokenView():
+class SMSCodeByTokenView(APIView):
     """
     根据 access_token 发送短信
     """
     def get(self, request):
         # 获取并校验 access_token
-        access_token = request.query_params('access_token')
+        access_token = request.query_params.get('access_token')
         if not access_token:
             return Response({"message": "缺少 access_token"}, status=status.HTTP_400_BAD_REQUEST)
 
