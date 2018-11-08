@@ -213,7 +213,7 @@ var vm = new Vue({
             }
 
             // 向后端接口发送请求，让后端发送短信验证码
-            axios.get(this.host + "/sms_codes/" + '/sms_codes/' + this.mobile + '/?text=' + this.image_code+'&image_code_id='+ this.image_code_id, {
+            axios.get(this.host + "/sms_codes/" + this.mobile + '/?text=' + this.image_code+'&image_code_id='+ this.image_code_id, {
                     // 向后端说明，请返回 json 数据
                     responseType: 'json'
                 })
