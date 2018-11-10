@@ -1,8 +1,11 @@
 from django.shortcuts import render
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .utils import OAuthQQ
+from .exceptions import QQAPIException
+from .models import OAuthQQUser
 
 # Create your views here.
 
@@ -25,6 +28,44 @@ class OAuthQQURLView(APIView):
 
         # 返回链接地址
         return Response({'auth_url': auth_url})
+
+
+class OAuthQQUserView(APIView):
+    """
+    获取 QQ 用户对应的美多商城用户
+    """
+    def get(self, request):
+        # 提取 code 参数
+        code = request.query_params.get('code')
+        if not code:
+            return Response({"message": "缺少code"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 凭借 code 向 qq 服务器发起请求，获取 access_token
+        oauth_qq = OAuthQQ()
+        try:
+            access_token = oauth_qq.get_access_token()
+
+            # 凭借 access_token 向 qq 服务器发起请求，获取openid
+            openid = oauth_qq.get_openid()
+        except QQAPIException:
+            return Response({"message": "获取QQ用户数据异常"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        # 根据 openid 查询此用户是否之前在美多中绑定用户
+        try:
+            oauth_user = OAuthQQUser.objects.get(openid=openid)
+        except OAuthQQUser.DoesNotExist:
+            # 如果未绑定，手动创建接下来绑定身份使用的 access_token
+            pass
+        else:
+            # 如果已经绑定，直接生成登录凭证 JWT token， 并返回
+            pass
+
+
+
+
+
+
+
 
 
 
