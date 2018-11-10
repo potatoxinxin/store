@@ -10,7 +10,7 @@ class OAuthQQ(object):
     def __init__(self, app_id=None, app_key=None, redirect_uri=None, state=None):
         self.app_id = app_id or settings.QQ_APP_ID
         self.app_key = app_key or settings.QQ_APP_KEY
-        self.redirect_uri = redirect_uri or settings.QQ_REDIRECT_URI
+        self.redirect_uri = redirect_uri or settings.QQ_REDIRECT_URL
         self.state = state or settings.QQ_STATE  # 用于保存登录成功后的跳转页面路径
 
     def get_qq_login_url(self):
