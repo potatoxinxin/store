@@ -3,10 +3,11 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework import mixins
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, GenericAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import re
+from rest_framework.permissions import IsAuthenticated
 
 from . import serializers
 from .models import User
@@ -116,6 +117,31 @@ class PasswordView(mixins.UpdateModelMixin, GenericAPIView):
 
     def post(self, request, pk):
         return self.update(request, pk)
+
+
+class UserDetailView(RetrieveAPIView):
+    """
+    用户详细信息
+    """
+    serializer_class = serializers.UserDetailSerializer
+    # 通过认证才能访问接口权限
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        """
+        返回请求的用户对象
+        :return: user
+        """
+        return self.request.user
+
+
+
+
+
+
+
+
+
 
 
 
