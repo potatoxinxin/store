@@ -2,6 +2,7 @@ from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework_jwt.settings import api_settings
 
 from .utils import OAuthQQ
 from .exceptions import QQAPIException
@@ -43,10 +44,10 @@ class OAuthQQUserView(APIView):
         # 凭借 code 向 qq 服务器发起请求，获取 access_token
         oauth_qq = OAuthQQ()
         try:
-            access_token = oauth_qq.get_access_token()
+            access_token = oauth_qq.get_access_token(code)
 
             # 凭借 access_token 向 qq 服务器发起请求，获取openid
-            openid = oauth_qq.get_openid()
+            openid = oauth_qq.get_openid(access_token)
         except QQAPIException:
             return Response({"message": "获取QQ用户数据异常"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
@@ -55,12 +56,25 @@ class OAuthQQUserView(APIView):
             oauth_user = OAuthQQUser.objects.get(openid=openid)
         except OAuthQQUser.DoesNotExist:
             # 如果未绑定，手动创建接下来绑定身份使用的 access_token
-            pass
+            access_token = OAuthQQUser.generate_save_user_token(openid)
+            return Response({"access_token": access_token})
+
         else:
             # 如果已经绑定，直接生成登录凭证 JWT token， 并返回
-            pass
+            # 手动为用户生成 JWT token
+            user = oauth_user.user
 
+            jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+            jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
+            payload = jwt_payload_handler(user)
+            token = jwt_encode_handler(payload)
+
+            return Response({
+                "token": token,
+                "username": user.username,
+                "user_id": user.id
+            })
 
 
 
