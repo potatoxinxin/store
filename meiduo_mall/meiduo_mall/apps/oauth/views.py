@@ -3,6 +3,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_jwt.settings import api_settings
+from rest_framework.generics import GenericAPIView
+from .serializers import OAuthQQUserSerializer
 
 from .utils import OAuthQQ
 from .exceptions import QQAPIException
@@ -31,10 +33,12 @@ class OAuthQQURLView(APIView):
         return Response({'auth_url': auth_url})
 
 
-class OAuthQQUserView(APIView):
+class OAuthQQUserView(GenericAPIView):
     """
     获取 QQ 用户对应的美多商城用户
     """
+    serializer_class = OAuthQQUserSerializer
+
     def get(self, request):
         # 提取 code 参数
         code = request.query_params.get('code')
@@ -76,11 +80,25 @@ class OAuthQQUserView(APIView):
                 "user_id": user.id
             })
 
+    def post(self, request):
+        # 调用序列化器检查数据，保存
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
+        user = serializer.save()
 
+        # 返回用户登录的 JWT token
+        jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
+        jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
+        payload = jwt_payload_handler(user)
+        token = jwt_encode_handler(payload)
 
-
+        return Response({
+            "token": token,
+            "username": user.username,
+            "user_id": user.id
+        })
 
 
 
