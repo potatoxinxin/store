@@ -67,7 +67,7 @@ class OAuthQQ(object):
             # 将返回的数据转为字典
             resp_dict = parse_qs(response)
 
-            access_token = resp_dict.get('access_token')
+            access_token = resp_dict.get('access_token')[0]
         except Exception as e:
             logger.error(e)
             raise QQAPIException("获取 access_token 异常")
