@@ -3,7 +3,7 @@ from django.shortcuts import render
 # Create your views here.
 from rest_framework import mixins
 from rest_framework import status
-from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, GenericAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 import re
@@ -135,6 +135,15 @@ class UserDetailView(RetrieveAPIView):
         return self.request.user
 
 
+class EmailView(UpdateAPIView):
+    """
+    保存用户邮箱
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.EmailSerializer
+
+    def get_object(self, *args, **kwargs):
+        return self.request.user
 
 
 
