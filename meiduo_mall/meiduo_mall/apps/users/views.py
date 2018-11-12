@@ -146,7 +146,22 @@ class EmailView(UpdateAPIView):
         return self.request.user
 
 
+class EmailVerifyView(APIView):
+    """
+    邮箱验证
+    """
+    def get(self, request):
+        # 获取token
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'message': '缺少token'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # 验证token
+        result = User.check_email_verify_token(token)
+        if result:
+            return Response({'message': 'OK'})
+        else:
+            return Response({'message': '非法的 token'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 

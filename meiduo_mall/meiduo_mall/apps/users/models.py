@@ -75,6 +75,40 @@ class User(AbstractUser):
             else:
                 return True
 
+    def generate_verify_email_url(self):
+        """
+        生成验证邮箱的url
+        """
+        serializer = TJWSSerializer(settings.SECRET_KEY, expires_in=constants.EMAIL_VERIFY_TOKEN_EXPIRES)
+        data = {'user_id': self.id, 'email': self.email}
+        token = serializer.dumps(data).decode()
+        verify_url = 'http://www.meiduo.site:8080/success_verify_email.html?token=' + token
+        return verify_url
+
+    @staticmethod
+    def check_email_verify_token(token):
+        """
+        检查验证邮件的token
+        """
+        serializer = TJWSSerializer(settings.SECRET_KEY, expires_in=constants.EMAIL_VERIFY_TOKEN_EXPIRES)
+        try:
+            data = serializer.loads(token)
+        except BadData:
+            return None
+        else:
+            email = data.get('email')
+            user_id = data.get('user_id')
+            # try:
+            #     user = User.objects.get(id=user_id, email=email)
+            # except User.DoesNotExist:
+            #     return None
+            # else:
+            #     return user
+            User.objects.filter(id=user_id, email=email).update(email_active=True)
+            return True
+
+
+
 
 
 

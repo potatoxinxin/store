@@ -3,6 +3,7 @@ from urllib.parse import urlencode, parse_qs
 from urllib.request import urlopen
 import logging
 import json
+import re
 
 from .exceptions import QQAPIException
 
@@ -68,6 +69,8 @@ class OAuthQQ(object):
             resp_dict = parse_qs(response)
 
             access_token = resp_dict.get('access_token')[0]
+
+            # access_token = parse_qs(urlopen(url).read().decode()).get('access_token')[0]
         except Exception as e:
             logger.error(e)
             raise QQAPIException("获取 access_token 异常")
@@ -86,7 +89,9 @@ class OAuthQQ(object):
             response = urlopen(url)
             response_data = response.read().decode()
             # 返回的数据 callback( {"client_id":"YOUR_APPID","openid":"YOUR_OPENID"} )\n;
-            data = json.loads(response_data[10:-4])
+            # data = json.loads(response_data[10:-4])
+            # 使用正则来提取参数
+            data = json.loads(re.match(r'callback\( (.*) \)', response_data).group(1))
         except Exception:
             data = parse_qs(response_data)
             logger.error('code=%s msg=%s' % (data.get('code'), data.get('msg')))
