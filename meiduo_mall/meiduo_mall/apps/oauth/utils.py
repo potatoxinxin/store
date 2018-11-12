@@ -6,7 +6,7 @@ import json
 
 from .exceptions import QQAPIException
 
-logger = logging.getLogger('django ')
+logger = logging.getLogger('django')
 
 
 class OAuthQQ(object):

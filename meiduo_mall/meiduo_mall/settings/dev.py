@@ -249,6 +249,13 @@ QQ_APP_KEY = 'c6ce949e04e12ecc909ae6a8b09b637c'
 QQ_REDIRECT_URL = 'http://www.meiduo.site:8080/oauth_callback.html'
 QQ_STATE = '/'
 
+# Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.163.com'
+EMAIL_PORT = 25
+EMAIL_HOST_USER = 'qinyifan__123@163.com'  # 发送邮件的邮箱
+EMAIL_HOST_PASSWORD = 'qinyifan123'  # 在邮箱中设置的客户端授权密码
+EMAIL_FROM = '美多商城<qinyifan__123@163.com>'  # 收件人看到的发件人
 
 
 
