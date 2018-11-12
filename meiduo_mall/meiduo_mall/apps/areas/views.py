@@ -17,6 +17,7 @@ class AreasViewSet(CacheResponseMixin, ReadOnlyModelViewSet):
     返回特定省或市的下属行政规划区域
     """
     # queryset = Area.objects.all()
+    pagination_class = None  # 关闭分页处理
 
     def get_queryset(self):
         """

@@ -20,3 +20,7 @@ class Area(models.Model):
 
 # area1.subs 通过这个属性，可以获取相关的多数集合的数据（下属的下级规划区域）
 # 默认是通过 类型_set 来进行查询（area_set），通过指明 related_name 参数后，直接通过参数的数据来查询
+
+
+
+
