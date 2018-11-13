@@ -218,6 +218,11 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
+    'DEFAULT_RENDERER_CLASSES': (  # 默认响应渲染类
+        # 'rest_framework.renderers.JSONRenderer',  # json渲染器
+        'renders.JSONRender',
+        'rest_framework.renderers.BrowsableAPIRenderer',  # 浏览API渲染器
+    ),
 }
 
 # JWT
