@@ -236,7 +236,18 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
         return Response(serializer.data)
 
 
+class UserHistoryView(mixins.CreateModelMixin, GenericAPIView):
+    """
+    用户浏览历史记录
+    """
+    serializer_class = serializers.AddUserHistorySerializer
+    permission_classes = [IsAuthenticated]
 
+    def post(self, request):
+        """
+        保存
+        """
+        return self.create(request)
 
 
 

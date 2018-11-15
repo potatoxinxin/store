@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.generics import ListAPIView
+from rest_framework_extensions.cache.mixins import ListCacheResponseMixin
 
 from .serializers import SKUSerializer
 from .models import SKU
@@ -7,8 +8,6 @@ from . import constants
 
 # Create your views here.
 
-
-from rest_framework_extensions.cache.mixins import ListCacheResponseMixin
 
 class HotSKUListView(ListCacheResponseMixin, ListAPIView):
     """
