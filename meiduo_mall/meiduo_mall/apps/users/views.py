@@ -10,12 +10,15 @@ from rest_framework.views import APIView
 import re
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
+from django_redis import get_redis_connection
 
 from verifications.serializers import CheckImageCodeSerializer
 from . import serializers
 from .models import User
 from .utils import get_user_by_account
 from . import constants
+from goods.models import SKU
+from goods.serializers import SKUSerializer
 
 
 class UsernameCountView(APIView):
@@ -249,7 +252,22 @@ class UserHistoryView(mixins.CreateModelMixin, GenericAPIView):
         """
         return self.create(request)
 
+    def get(self, request):
+        """
+        获取
+        """
+        user_id = request.user.id
 
+        redis_conn = get_redis_connection("history")
+        history = redis_conn.lrange("history_%s" % user_id, 0, constants.USER_BROWSING_HISTORY_COUNTS_LIMIT - 1)
+        sku_list = []
+        # 为了保持查询出的顺序与用户的浏览历史保存顺序一致
+        for sku_id in history:
+            sku = SKU.objects.get(id=sku_id)
+            sku_list.append(sku)
+
+        s = SKUSerializer(sku_list, many=True)
+        return Response(s.data)
 
 
 
