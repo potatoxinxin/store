@@ -172,7 +172,7 @@ class AddressViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, GenericVi
     用户地址新增与修改
     """
     serializer_class = serializers.UserAddressSerializer
-    permissions = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return self.request.user.addresses.filter(is_deleted=False)
