@@ -9,9 +9,21 @@ from . import constants
 # Create your views here.
 
 
+# class HotSKUListView(ListCacheResponseMixin, ListAPIView):
+#     """
+#     热销商品, 使用缓存扩展
+#     """
+#     serializer_class = SKUSerializer
+#     pagination_class = None
+#
+#     def get_queryset(self):
+#         category_id = self.kwargs['category_id']
+#         return SKU.objects.filter(category_id=category_id, is_launched=True).order_by('-sales')[:constants.HOT_SKUS_COUNT_LIMIT]
+
+
 class HotSKUListView(ListCacheResponseMixin, ListAPIView):
     """
-    热销商品, 使用缓存扩展
+    热销产品，使用缓存扩展
     """
     serializer_class = SKUSerializer
     pagination_class = None
@@ -19,3 +31,5 @@ class HotSKUListView(ListCacheResponseMixin, ListAPIView):
     def get_queryset(self):
         category_id = self.kwargs['category_id']
         return SKU.objects.filter(category_id=category_id, is_launched=True).order_by('-sales')[:constants.HOT_SKUS_COUNT_LIMIT]
+
+
