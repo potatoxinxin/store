@@ -86,9 +86,26 @@ var vm = new Vue({
             }
             return null;
         },
-        // 请求商品数据
+         // 请求商品数据
         get_skus: function(){
-
+            axios.get(this.host+'/categories/'+this.cat+'/skus', {
+                    params: {
+                        page: this.page,
+                        page_size: this.page_size,
+                        ordering: this.ordering
+                    },
+                    responseType: 'json'
+                })
+                .then(response => {
+                    this.count = response.data.count;
+                    this.skus = response.data.results;
+                    for(var i=0; i<this.skus.length; i++){
+                        this.skus[i].url = '/goods/' + this.skus[i].id + ".html";
+                    }
+                })
+                .catch(error => {
+                    console.log(error.response.data);
+                })
         },
         // 点击页数
         on_page: function(num){
