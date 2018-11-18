@@ -88,7 +88,7 @@ var vm = new Vue({
         },
          // 请求商品数据
         get_skus: function(){
-            axios.get(this.host+'/categories/'+this.cat+'/skus', {
+            axios.get(this.host+'/categories/'+this.cat+'/skus/', {
                     params: {
                         page: this.page,
                         page_size: this.page_size,
