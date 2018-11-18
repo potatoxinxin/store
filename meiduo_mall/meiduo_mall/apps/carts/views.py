@@ -128,6 +128,60 @@ class CartView(APIView):
         serializer = CartsSKUSerializer(sku_obj_list, many=True)
         return Response(serializer.data)
 
+    def put(self, request):
+        """修改购物车数据"""
+        # 检查前端发送的数据是否正确
+        serializer = CartSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        sku_id = serializer.validated_data.get('sku_id')
+        count = serializer.validated_data.get('count')
+        selected = serializer.validated_data.get('selected')
+
+        # 判断用户是否登录
+        try:
+            user = request.user
+        except Exception:
+            user = None
+
+        if user is not None and user.is_authenticated:
+            # 用户已登录，修改 redis 中的数据
+            redis_conn = get_redis_connection('cart')
+            pl = redis_conn.pipeline()
+            pl.hset('cart_%s' % user.id, sku_id, count)
+
+            if selected:
+                # 勾选增加记录
+                pl.sadd('cart_selected_%s' % user.id, sku_id)
+            else:
+                # 未勾选，删除记录
+                pl.srem('cart_selected_%s' % user.id, sku_id)
+
+            pl.execute()
+            return Response(serializer.data)
+
+        else:
+            # 用户未登录，修改 cookie 中的数据
+            cart_str = request.COOKIES.get('cart')
+
+            if cart_str:
+                cart_dict = pickle.loads(base64.b16decode(cart_str.encode()))
+            else:
+                cart_dict = {}
+
+            if sku_id in cart_dict:
+                cart_dict[sku_id] = {
+                    'count': count,
+                    'selected': selected
+                }
+
+            cookie_cart = base64.b64encode(pickle.dumps(cart_dict)).decode()
+
+            # 返回
+            response = Response(serializer.data)
+            response.set_cookie('cart', cookie_cart)
+
+            return response
 
 
 
