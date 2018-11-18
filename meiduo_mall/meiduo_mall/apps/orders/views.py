@@ -4,9 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from decimal import Decimal
+from rest_framework.generics import CreateAPIView
 
 from goods.models import SKU
-from orders.serializers import OrderSettlementSerializer
+from .serializers import OrderSettlementSerializer, SaveOrderSerializer
 # Create your views here.
 
 
@@ -42,3 +43,11 @@ class OrderSettlementView(APIView):
 
         serializer = OrderSettlementSerializer({'freight': freight, 'skus': skus})
         return Response(serializer.data)
+
+
+class SaveOrderView(CreateAPIView):
+    """
+    保存订单
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = SaveOrderSerializer
