@@ -8,7 +8,7 @@ from django_redis import get_redis_connection
 from rest_framework.response import Response
 
 from goods.models import SKU
-from .serializers import CartSerializer, CartsSKUSerializer
+from .serializers import CartSerializer, CartsSKUSerializer, CartDeleteSerializer
 
 # Create your views here.
 
@@ -183,12 +183,50 @@ class CartView(APIView):
 
             return response
 
+    def delete(self, request):
+        """
+        删除购物车数据
+        """
+        serializer = CartDeleteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        sku_id = serializer.validated_data['sku_id']
 
+        # 判断用户是否登录
+        try:
+            user = request.user
+        except Exception:
+            user = None
 
+        if user is not None and user.is_authenticated:
+            # 用户已登录，修改 redis 中的数据
+            redis_conn = get_redis_connection('cart')
+            pl = redis_conn.pipeline()
 
+            pl.hdel('cart_%s' % user.id, sku_id)
+            pl.srem('cart_selected_%s' % user.id, sku_id)
 
+            pl.execute()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            # 用户未登录，修改 cookie 中的数据
+            cart_str = request.COOKIES.get('cart')
 
+            if cart_str:
+                cart_dict = pickle.loads(base64.b16decode(cart_str.encode()))
+            else:
+                cart_dict = {}
 
+            response = Response(serializer.data)
+
+            if sku_id in cart_dict:
+                # 删除字典的键值对
+                del cart_dict[sku_id]
+
+                cookie_cart = base64.b64encode(pickle.dumps(cart_dict)).decode()
+
+                response.set_cookie('cart', cookie_cart)
+
+            return response
 
 
 
