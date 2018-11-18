@@ -73,7 +73,7 @@ class CartView(APIView):
                 'selected': selected
             }
 
-            cookie_cart = base64.b64encode(pickle.dump(cart_dict)).decode()
+            cookie_cart = base64.b64encode(pickle.dumps(cart_dict)).decode()
 
             response = Response(serializer.data, status=status.HTTP_201_CREATED)
 

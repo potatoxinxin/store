@@ -11,6 +11,7 @@ import re
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 from django_redis import get_redis_connection
+from rest_framework_jwt.views import ObtainJSONWebToken
 
 from verifications.serializers import CheckImageCodeSerializer
 from . import serializers
@@ -19,6 +20,7 @@ from .utils import get_user_by_account
 from . import constants
 from goods.models import SKU
 from goods.serializers import SKUSerializer
+from carts.utils import merge_cart_cookie_to_redis
 
 
 class UsernameCountView(APIView):
@@ -269,6 +271,22 @@ class UserHistoryView(mixins.CreateModelMixin, GenericAPIView):
         s = SKUSerializer(sku_list, many=True)
         return Response(s.data)
 
+
+class UserAuthorizationView(ObtainJSONWebToken):
+    """重写用户认证，添加 cookie 合并"""
+
+    def post(self, request, *args, **kwargs):
+        # 调用父类的方法，获取drf jwt扩展默认的认证用户处理结果
+        response = super().post(request, *args, **kwargs)
+
+        # 仿照drf jwt扩展对于用户登录的认证方式，判断用户是否认证登录成功
+        # 如果用户登录认证成功，则合并购物车
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data.get('user')
+            response = merge_cart_cookie_to_redis(request, response, user)
+
+        return response
 
 
 
