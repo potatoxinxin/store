@@ -18,7 +18,7 @@ class CartView(APIView):
     购物车
     """
     def perform_authentication(self, request):
-        """重新检查 JWT token 是否正确   忽略掉"""
+        """重写检查 JWT token 是否正确   忽略掉"""
         pass
 
     def post(self, request):

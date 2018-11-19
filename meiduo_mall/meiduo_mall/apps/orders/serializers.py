@@ -43,7 +43,7 @@ class SaveOrderSerializer(serializers.ModelSerializer):
         # 获取当前下单用户
         user = self.context['request'].user
 
-        # 组织订单编号 20170903153611+user.id
+        # 组织订单编号 20181118185814+user.id
         # timezone.now() -> datetime
         order_id = timezone.now().strftime('%Y%m%d%H%M%S') + ('%09d' % user.id)
 
@@ -79,34 +79,55 @@ class SaveOrderSerializer(serializers.ModelSerializer):
                 for sku_id in cart_selected:
                     cart[int(sku_id)] = int(cart_redis[sku_id])
 
-                # 一次查询出所有商品数据
-                sku_obj_list = SKU.objects.filter(id__in=cart.keys())
+                # # 一次查询出所有商品数据
+                # sku_obj_list = SKU.objects.filter(id__in=cart.keys())
+
+                sku_id_list = cart.keys()
 
                 # 遍历勾选要下单的商品数据
-                for sku in sku_obj_list:
-                    # 判断商品库存是否充足
-                    count = cart[sku.id]
-                    if sku.stock < count:
-                        # 事务回滚
-                        transaction.savepoint_rollback(save_id)
-                        raise serializers.ValidationError('商品库存不足')
+                for sku_id in sku_id_list:
+                    while True:
 
-                    # 减少商品的库存 SKU，增加销量
-                    sku.stock -= count
-                    sku.sales += count
-                    sku.save()
+                        sku = SKU.objects.get(id=sku_id)
 
-                    # 累计订单基本信息的数据
-                    order.total_count += count  # 累计总金额
-                    order.total_amount += (sku.price * count)  # 累计总额
+                        # 判断商品库存是否充足
+                        count = cart[sku.id]
+                        origin_stock = sku.stock
+                        origin_sales = sku.sales
 
-                    # 保存到 OrderGoods
-                    OrderGoods.objects.create(
-                        order=order,
-                        sku=sku,
-                        count=count,
-                        price=sku.price,
-                    )
+                        if sku.stock < count:
+                            # 事务回滚
+                            transaction.savepoint_rollback(save_id)
+                            raise serializers.ValidationError('商品库存不足')
+
+                        # 减少商品的库存 SKU，增加销量
+                        # sku.stock -= count
+                        # sku.sales += count
+                        new_stock = origin_stock - count
+                        new_sales = origin_sales + count
+
+                        # 根据原始库存条件更新，返回更新的条目数，乐观锁
+                        ret = SKU.objects.filter(id=sku.id, stock=origin_stock).update(stock=new_stock, sales=new_sales)
+                        if ret == 0:
+                            continue
+
+
+                        sku.save()
+
+                        # 累计订单基本信息的数据
+                        order.total_count += count  # 累计总额
+                        order.total_amount += (sku.price * count)  # 累计总金额
+
+                        # 保存到 OrderGoods
+                        OrderGoods.objects.create(
+                            order=order,
+                            sku=sku,
+                            count=count,
+                            price=sku.price,
+                        )
+
+                        # 更新成功
+                        break
 
                 # 更新订单的金额数量信息
                 order.save()
