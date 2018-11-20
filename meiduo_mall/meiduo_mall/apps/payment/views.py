@@ -9,7 +9,7 @@ from alipay import AliPay
 from django.conf import settings
 
 from orders.models import OrderInfo
-
+from .models import Payment
 # Create your views here.
 
 
@@ -31,7 +31,7 @@ class PaymentView(APIView):
 
         # 根据订单的数据，向支付宝发起请求，获取支付链接参数
         # 构造支付宝支付链接地址
-        alipay = AliPay(
+        alipay_client = AliPay(
             appid=settings.ALIPAY_APPID,
             app_notify_url=None,  # 默认回调url
             app_private_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "keys/app_private_key.pem"),
@@ -41,7 +41,7 @@ class PaymentView(APIView):
             debug=settings.ALIPAY_DEBUG  # 默认False
         )
 
-        order_string = alipay.api_alipay_trade_page_pay(
+        order_string = alipay_client.api_alipay_trade_page_pay(
             out_trade_no=order_id,
             total_amount=str(order.total_amount),
             subject="美多商城%s" % order_id,
@@ -52,6 +52,65 @@ class PaymentView(APIView):
         # 拼接链接返回前端
         alipay_url = settings.ALIPAY_GETWAY_URL + "?" + order_string
         return Response({'alipay_url': alipay_url})
+
+
+class PaymentStatusView(APIView):
+    """
+    修改支付结果状态
+    """
+    def put(self, request):
+        # 取出请求的参数
+        query_dict = request.query_params
+        # 将 django 中的 QueryDict 转换成 python 中的字典
+        alipay_data_dict = query_dict.dict()
+
+        sign = alipay_data_dict.pop('sign')
+
+        # 校验请求参数是否是支付宝的
+        # 构造支付宝支付链接地址
+        alipay_client = AliPay(
+            appid=settings.ALIPAY_APPID,
+            app_notify_url=None,  # 默认回调url
+            app_private_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "keys/app_private_key.pem"),
+            alipay_public_key_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                "keys/alipay_public_key.pem"),  # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
+            sign_type="RSA2",  # RSA 或者 RSA2
+            debug=settings.ALIPAY_DEBUG  # 默认False
+         )
+
+        success = alipay_client.verify(alipay_data_dict, sign)
+
+        if success:
+            # 订单编号
+            order_id = alipay_data_dict.get('out_trade_no')
+            # 支付宝支付流水号
+            trade_id = alipay_data_dict.get('trade_no')
+
+            # 保存支付数据
+            # 修改订单数据
+            Payment.objects.create(
+                order_id=order_id,
+                trade_id=trade_id
+            )
+            OrderInfo.objects.filter(order_id=order_id, status=OrderInfo.ORDER_STATUS_ENUM["UNPAID"]).update(status=OrderInfo.ORDER_STATUS_ENUM["UNSEND"])
+            return Response({'trade_id': trade_id})
+
+        else:
+            return Response({'message': "非法请求"}, status=status.HTTP_403_FORBIDDEN)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
