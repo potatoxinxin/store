@@ -355,5 +355,5 @@ ALIPAY_APPID = 2016091900549384
 ALIPAY_DEBUG = True
 ALIPAY_GETWAY_URL = 'https://openapi.alipaydev.com/gateway.do'
 
-
-
+# 收集静态文件
+STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'front_end_pc/static')
